@@ -87,33 +87,33 @@ def render_organizer_dashboard():
 
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box">
-            <div class="simats-metric-label">Events Created</div>
-            <div class="simats-metric-value">{total_events}</div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box">'
+            f'<div class="simats-metric-label">Events Created</div>'
+            f'<div class="simats-metric-value">{total_events}</div>'
+            f'</div>'
+        )
     with col_m2:
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box green">
-            <div class="simats-metric-label">Total Registrations</div>
-            <div class="simats-metric-value">{kpis['total_registrations']}</div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box green">'
+            f'<div class="simats-metric-label">Total Registrations</div>'
+            f'<div class="simats-metric-value">{kpis["total_registrations"]}</div>'
+            f'</div>'
+        )
     with col_m3:
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box gold">
-            <div class="simats-metric-label">Checked-In Attendees</div>
-            <div class="simats-metric-value">{kpis['total_attendance']}</div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box gold">'
+            f'<div class="simats-metric-label">Checked-In Attendees</div>'
+            f'<div class="simats-metric-value">{kpis["total_attendance"]}</div>'
+            f'</div>'
+        )
     with col_m4:
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box">
-            <div class="simats-metric-label">Simulated Collections</div>
-            <div class="simats-metric-value">₹{int(kpis['total_revenue'])}</div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box">'
+            f'<div class="simats-metric-label">Simulated Collections</div>'
+            f'<div class="simats-metric-value">₹{int(kpis["total_revenue"])}</div>'
+            f'</div>'
+        )
 
     st.write("")
 
@@ -150,32 +150,33 @@ def render_organizer_dashboard():
 
                 with st.container():
                     # HTML-safe event card with thumbnail and metadata
-                    card_html = textwrap.dedent(f"""
-                    <div class="simats-card" style="margin-bottom: 0.6rem; padding: 14px 18px; border-radius: 10px; border: 1px solid #E2E8F0; background: #FFFFFF; box-shadow: 0 2px 8px rgba(10,37,64,0.04);">
-                        <div style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
-                            <div style="flex: 0 0 140px; max-width: 140px; border-radius: 8px; overflow: hidden; border: 1px solid #CBD5E1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
-                                <img src="{cur_poster_b64}" style="width: 100%; height: 105px; object-fit: cover; display: block;" alt="{ev['title']} Poster"/>
-                            </div>
-                            <div style="flex: 1; min-width: 280px;">
-                                <div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
-                                    <span class="simats-badge badge-internal">{ev['category']}</span>
-                                    <span class="simats-badge badge-external">{ev['format']}</span>
-                                    <span class="simats-badge badge-status-open">Status: {ev['status']}</span>
-                                    {f'<span class="simats-badge badge-status-pending">Live: {eff_status}</span>' if eff_status != ev['status'] else ''}
-                                </div>
-                                <h3 style="margin: 0 0 6px 0; color: #0A2540; font-size: 1.2rem; font-weight: 700;">{ev['title']}</h3>
-                                <p style="margin: 0 0 8px 0; color: #64748B; font-size: 0.88rem; line-height: 1.35;">{ev['summary'] or (ev['description'][:120] + '...')}</p>
-                                <div style="display: flex; gap: 16px; font-size: 0.82rem; color: #475569; flex-wrap: wrap;">
-                                    <div>📅 <strong>Dates:</strong> {ev['start_time'][:16]} to {ev['end_time'][:16]}</div>
-                                    <div>📍 <strong>Venue:</strong> {ev['venue']}</div>
-                                    <div>👥 <strong>Capacity:</strong> {counts['reg_count']}/{ev['capacity']} (Attended: {counts['att_count']})</div>
-                                    <div>💳 <strong>Ext Fee:</strong> ₹{int(ev['external_fee'])} | <strong>Internal:</strong> ₹0.00</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    """).strip()
-                    st.html(card_html)
+                    live_badge = f'<span class="simats-badge badge-status-pending">Live: {eff_status}</span>' if eff_status != ev['status'] else ''
+                    ev_summary_text = ev['summary'] or (ev['description'][:120] + '...')
+                    render_html(
+                        f'<div class="simats-card" style="margin-bottom: 0.6rem; padding: 14px 18px; border-radius: 10px; border: 1px solid #E2E8F0; background: #FFFFFF; box-shadow: 0 2px 8px rgba(10,37,64,0.04);">'
+                        f'<div style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">'
+                        f'<div style="flex: 0 0 140px; max-width: 140px; border-radius: 8px; overflow: hidden; border: 1px solid #CBD5E1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">'
+                        f'<img src="{cur_poster_b64}" style="width: 100%; height: 105px; object-fit: cover; display: block;" alt="{ev["title"]} Poster"/>'
+                        f'</div>'
+                        f'<div style="flex: 1; min-width: 280px;">'
+                        f'<div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">'
+                        f'<span class="simats-badge badge-internal">{ev["category"]}</span>'
+                        f'<span class="simats-badge badge-external">{ev["format"]}</span>'
+                        f'<span class="simats-badge badge-status-open">Status: {ev["status"]}</span>'
+                        f'{live_badge}'
+                        f'</div>'
+                        f'<h3 style="margin: 0 0 6px 0; color: #0A2540; font-size: 1.2rem; font-weight: 700;">{ev["title"]}</h3>'
+                        f'<p style="margin: 0 0 8px 0; color: #64748B; font-size: 0.88rem; line-height: 1.35;">{ev_summary_text}</p>'
+                        f'<div style="display: flex; gap: 16px; font-size: 0.82rem; color: #475569; flex-wrap: wrap;">'
+                        f'<div>📅 <strong>Dates:</strong> {ev["start_time"][:16]} to {ev["end_time"][:16]}</div>'
+                        f'<div>📍 <strong>Venue:</strong> {ev["venue"]}</div>'
+                        f'<div>👥 <strong>Capacity:</strong> {counts["reg_count"]}/{ev["capacity"]} (Attended: {counts["att_count"]})</div>'
+                        f'<div>💳 <strong>Ext Fee:</strong> ₹{int(ev["external_fee"])} | <strong>Internal:</strong> ₹0.00</div>'
+                        f'</div>'
+                        f'</div>'
+                        f'</div>'
+                        f'</div>'
+                    )
 
                     # Show Admin Feedback if present
                     if ev.get("admin_feedback"):
@@ -240,13 +241,12 @@ def render_organizer_dashboard():
                             ed_desc = st.text_area("Full Description", value=ev["description"])
 
                             # Custom Event Poster Preview and File Uploader
-                            poster_preview_html = textwrap.dedent(f"""
-                            <div style="margin-bottom: 8px;">
-                                <span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Active Event Poster:</span><br/>
-                                <img src="{cur_poster_b64}" style="height: 110px; border-radius: 6px; border: 1px solid #CBD5E1; margin-top: 4px; object-fit: cover;" alt="Poster preview"/>
-                            </div>
-                            """).strip()
-                            st.markdown(poster_preview_html, unsafe_allow_html=True)
+                            render_html(
+                                f'<div style="margin-bottom: 8px;">'
+                                f'<span style="font-size: 0.85rem; font-weight: 600; color: #475569;">Active Event Poster:</span><br/>'
+                                f'<img src="{cur_poster_b64}" style="height: 110px; border-radius: 6px; border: 1px solid #CBD5E1; margin-top: 4px; object-fit: cover;" alt="Poster preview"/>'
+                                f'</div>'
+                            )
 
                             edit_poster_file = st.file_uploader(
                                 "Replace Event Poster (PNG/JPG)",

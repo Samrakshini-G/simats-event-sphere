@@ -10,31 +10,49 @@ from functools import lru_cache
 
 # Workspace root directory
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_DIR = os.path.join(BASE_DIR, "assets")
 
-# Verified Static Asset Paths
+def _detect_assets_dir() -> str:
+    """Detect whether assets folder is named 'Assets' or 'assets' on disk (Linux vs Windows)."""
+    for folder_name in ["Assets", "assets"]:
+        candidate = os.path.join(BASE_DIR, folder_name)
+        if os.path.exists(candidate) and os.path.isdir(candidate):
+            return candidate
+    return os.path.join(BASE_DIR, "Assets")
+
+ASSETS_DIR = _detect_assets_dir()
+
+def _resolve_core_asset(*sub_parts: str) -> str:
+    """Helper to locate a core asset file across both Assets and assets directories."""
+    for base in [ASSETS_DIR, os.path.join(BASE_DIR, "Assets"), os.path.join(BASE_DIR, "assets")]:
+        direct = os.path.join(base, *sub_parts)
+        if os.path.exists(direct) and os.path.isfile(direct):
+            return direct
+    # Fallback to direct path under ASSETS_DIR
+    return os.path.join(ASSETS_DIR, *sub_parts)
+
+# Verified Static Asset Paths (Cross-Platform Windows and Linux)
 ASSETS = {
     # Logos
-    "logo_college": os.path.join(ASSETS_DIR, "Landing", "college_logo.png"),
-    "logo_engineering": os.path.join(ASSETS_DIR, "Landing", "simats_engineering_logo.png"),
+    "logo_college": _resolve_core_asset("Landing", "college_logo.png"),
+    "logo_engineering": _resolve_core_asset("Landing", "simats_engineering_logo.png"),
     
     # Campus & Hero Banners
-    "hero_campus": os.path.join(ASSETS_DIR, "Landing", "hero_campus.jpg"),
-    "hero_banner": os.path.join(ASSETS_DIR, "Landing", "campus", "Main photo on the Landing Page.jpeg"),
-    "campus_sail": os.path.join(ASSETS_DIR, "Landing", "campus", "Sail.jpeg"),
-    "research": os.path.join(ASSETS_DIR, "Landing", "research", "Research.jpeg"),
-    "student_activities": os.path.join(ASSETS_DIR, "Landing", "student_events", "Student Activities.jpeg"),
+    "hero_campus": _resolve_core_asset("Landing", "hero_campus.jpg"),
+    "hero_banner": _resolve_core_asset("Landing", "campus", "Main photo on the Landing Page.jpeg"),
+    "campus_sail": _resolve_core_asset("Landing", "campus", "Sail.jpeg"),
+    "research": _resolve_core_asset("Landing", "research", "Research.jpeg"),
+    "student_activities": _resolve_core_asset("Landing", "student_events", "Student Activities.jpeg"),
     
     # Achievements
-    "achievement_1": os.path.join(ASSETS_DIR, "Landing", "achievements", "Achievement 1.jpeg"),
-    "achievement_2": os.path.join(ASSETS_DIR, "Landing", "achievements", "Achievement 2.jpeg"),
-    "achievement_3": os.path.join(ASSETS_DIR, "Landing", "achievements", "Achievement 3.jpeg"),
-    "achievement_4": os.path.join(ASSETS_DIR, "Landing", "achievements", "Achievement 4.jpeg"),
-    "achievement_5": os.path.join(ASSETS_DIR, "Landing", "achievements", "Achievement 5.jpeg"),
+    "achievement_1": _resolve_core_asset("Landing", "achievements", "Achievement 1.jpeg"),
+    "achievement_2": _resolve_core_asset("Landing", "achievements", "Achievement 2.jpeg"),
+    "achievement_3": _resolve_core_asset("Landing", "achievements", "Achievement 3.jpeg"),
+    "achievement_4": _resolve_core_asset("Landing", "achievements", "Achievement 4.jpeg"),
+    "achievement_5": _resolve_core_asset("Landing", "achievements", "Achievement 5.jpeg"),
     
     # Event Posters & Certificates
-    "event_poster_template": os.path.join(ASSETS_DIR, "event_posters", "Poster Template.png"),
-    "certificate_template": os.path.join(ASSETS_DIR, "Certificates", "template_01.png"),
+    "event_poster_template": _resolve_core_asset("event_posters", "Poster Template.png") if os.path.exists(_resolve_core_asset("event_posters", "Poster Template.png")) else _resolve_core_asset("Event Posters", "Poster Template.png"),
+    "certificate_template": _resolve_core_asset("Certificates", "template_01.png"),
 }
 
 ACHIEVEMENT_ITEMS = [
@@ -87,17 +105,41 @@ CAMPUS_HIGHLIGHTS = [
 ]
 
 
+def find_case_insensitive(base: str, rel_path: str) -> str | None:
+    """Traverse directories case-insensitively for Linux deployments."""
+    parts = rel_path.replace("\\", "/").strip("/").split("/")
+    curr = base
+    for part in parts:
+        if not os.path.exists(curr) or not os.path.isdir(curr):
+            return None
+        found = False
+        try:
+            for entry in os.listdir(curr):
+                if entry.lower() == part.lower():
+                    curr = os.path.join(curr, entry)
+                    found = True
+                    break
+        except Exception:
+            return None
+        if not found:
+            return None
+    return curr if os.path.exists(curr) and os.path.isfile(curr) else None
+
+
 def resolve_asset_path(path_or_key: str) -> str:
     """
     Safely resolves a path or asset key to an existing local file.
-    If the input is an asset key, returns the verified absolute path.
-    If the input is already a valid file path, verifies and returns it.
-    Fallback ensures an existing valid asset is ALWAYS returned.
+    Works seamlessly across Windows and Linux (Streamlit Community Cloud).
     """
     if path_or_key in ASSETS:
         target = ASSETS[path_or_key]
-        if os.path.exists(target):
+        if os.path.exists(target) and os.path.isfile(target):
             return target
+        # Try case-insensitive lookup
+        rel = target.replace(BASE_DIR, "").lstrip("/\\")
+        ci = find_case_insensitive(BASE_DIR, rel)
+        if ci:
+            return ci
 
     # Handle relative or workspace-relative path
     if isinstance(path_or_key, str) and path_or_key:
@@ -110,8 +152,34 @@ def resolve_asset_path(path_or_key: str) -> str:
         if os.path.exists(cleaned) and os.path.isfile(cleaned):
             return cleaned
 
+        # Try case-insensitive from BASE_DIR
+        ci = find_case_insensitive(BASE_DIR, cleaned)
+        if ci:
+            return ci
+
+        # If starts with assets or Assets, try opposite case
+        if cleaned.lower().startswith("assets"):
+            rest = cleaned[6:].lstrip("/\\")
+            ci2 = find_case_insensitive(ASSETS_DIR, rest)
+            if ci2:
+                return ci2
+
     # Fallback default: Poster Template
-    return ASSETS["event_poster_template"]
+    template = ASSETS.get("event_poster_template")
+    if template and os.path.exists(template):
+        return template
+
+    # Search for any valid poster template file
+    for cand in [
+        os.path.join(ASSETS_DIR, "event_posters", "Poster Template.png"),
+        os.path.join(ASSETS_DIR, "Event Posters", "Poster Template.png"),
+        os.path.join(BASE_DIR, "Assets", "event_posters", "Poster Template.png"),
+        os.path.join(BASE_DIR, "Assets", "Event Posters", "Poster Template.png"),
+    ]:
+        if os.path.exists(cand):
+            return cand
+
+    return template or ""
 
 
 def get_event_poster_path(event: dict) -> str:

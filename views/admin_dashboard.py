@@ -87,52 +87,52 @@ def render_admin_dashboard():
 
     col_m1, col_m2, col_m3, col_m4 = st.columns(4)
     with col_m1:
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box">
-            <div class="simats-metric-label">Total Platform Users</div>
-            <div class="simats-metric-value">{users_stats.get('total_users', 0)}</div>
-            <div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">
-                Internal: {users_stats.get('internal_count', 0)} | Ext: {users_stats.get('external_count', 0)}
-            </div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box">'
+            f'<div class="simats-metric-label">Total Platform Users</div>'
+            f'<div class="simats-metric-value">{users_stats.get("total_users", 0)}</div>'
+            f'<div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">'
+            f'Internal: {users_stats.get("internal_count", 0)} | Ext: {users_stats.get("external_count", 0)}'
+            f'</div>'
+            f'</div>'
+        )
 
     with col_m2:
         pending_cnt = events_stats.get('pending_approval_count', 0)
         border_class = "gold" if pending_cnt > 0 else ""
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box {border_class}">
-            <div class="simats-metric-label">Pending Event Approvals</div>
-            <div class="simats-metric-value" style="color: {'#D97706' if pending_cnt > 0 else '#0A2540'};">
-                {pending_cnt}
-            </div>
-            <div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">
-                Total Events: {events_stats.get('total_events', 0)} (Active: {events_stats.get('active_events_count', 0)})
-            </div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box {border_class}">'
+            f'<div class="simats-metric-label">Pending Event Approvals</div>'
+            f'<div class="simats-metric-value" style="color: {"#D97706" if pending_cnt > 0 else "#0A2540"};">'
+            f'{pending_cnt}'
+            f'</div>'
+            f'<div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">'
+            f'Total Events: {events_stats.get("total_events", 0)} (Active: {events_stats.get("active_events_count", 0)})'
+            f'</div>'
+            f'</div>'
+        )
 
     with col_m3:
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box green">
-            <div class="simats-metric-label">Simulated Gross Collections</div>
-            <div class="simats-metric-value">₹{int(financial_stats.get('gross_collections', 0))}</div>
-            <div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">
-                Successful Transactions: {financial_stats.get('successful_txns', 0)}
-            </div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box green">'
+            f'<div class="simats-metric-label">Simulated Gross Collections</div>'
+            f'<div class="simats-metric-value">₹{int(financial_stats.get("gross_collections", 0))}</div>'
+            f'<div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">'
+            f'Successful Transactions: {financial_stats.get("successful_txns", 0)}'
+            f'</div>'
+            f'</div>'
+        )
 
     with col_m4:
-        st.markdown(textwrap.dedent(f"""
-        <div class="simats-metric-box">
-            <div class="simats-metric-label">Refunds Processed</div>
-            <div class="simats-metric-value">₹{int(financial_stats.get('total_refunds', 0))}</div>
-            <div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">
-                Total Organizers: {users_stats.get('organizer_count', 0)}
-            </div>
-        </div>
-        """).strip(), unsafe_allow_html=True)
+        render_html(
+            f'<div class="simats-metric-box">'
+            f'<div class="simats-metric-label">Refunds Processed</div>'
+            f'<div class="simats-metric-value">₹{int(financial_stats.get("total_refunds", 0))}</div>'
+            f'<div style="font-size: 0.75rem; color: #64748B; margin-top: 4px;">'
+            f'Total Organizers: {users_stats.get("organizer_count", 0)}'
+            f'</div>'
+            f'</div>'
+        )
 
     st.write("")
 
@@ -167,33 +167,34 @@ def render_admin_dashboard():
                 ev_poster_b64 = get_image_base64(ev_poster)
 
                 with st.container():
-                    approval_card_html = textwrap.dedent(f"""
-                    <div class="simats-card" style="margin-bottom: 0.6rem; padding: 14px 18px; border-radius: 10px; border: 1px solid #E2E8F0; background: #FFFFFF; box-shadow: 0 2px 8px rgba(10,37,64,0.04);">
-                        <div style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">
-                            <div style="flex: 0 0 140px; max-width: 140px; border-radius: 8px; overflow: hidden; border: 1px solid #CBD5E1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">
-                                <img src="{ev_poster_b64}" style="width: 100%; height: 105px; object-fit: cover; display: block;" alt="{ev['title']} Poster"/>
-                            </div>
-                            <div style="flex: 1; min-width: 280px;">
-                                <div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
-                                    <span class="simats-badge badge-internal">{ev['category']}</span>
-                                    <span class="simats-badge badge-external">{ev['format']}</span>
-                                    <span class="simats-badge badge-status-pending">Pending Approval</span>
-                                </div>
-                                <h3 style="margin: 0 0 6px 0; color: #0A2540; font-size: 1.2rem; font-weight: 700;">{ev['title']}</h3>
-                                <p style="margin: 0 0 8px 0; color: #475569; font-size: 0.88rem; line-height: 1.35;">{ev['summary'] or (ev['description'][:120] + '...')}</p>
-                                <div style="display: flex; gap: 16px; font-size: 0.82rem; color: #64748B; flex-wrap: wrap;">
-                                    <div>👤 <strong>Organizer:</strong> {ev['organizer_name']} ({ev.get('organizer_department') or 'Faculty'})</div>
-                                    <div>📅 <strong>Dates:</strong> {ev['start_time'][:16]} to {ev['end_time'][:16]}</div>
-                                    <div>📍 <strong>Venue:</strong> {ev['venue']}</div>
-                                    <div>👥 <strong>Capacity:</strong> {ev['capacity']} seats</div>
-                                    <div>💳 <strong>Ext Fee:</strong> ₹{int(ev['external_fee'])} | <strong>Internal:</strong> ₹0.00</div>
-                                </div>
-                                {f'<div style="margin-top: 6px; font-size: 0.82rem; color: #334155;"><strong>Agenda:</strong> {ev["agenda"]}</div>' if ev.get("agenda") else ''}
-                            </div>
-                        </div>
-                    </div>
-                    """).strip()
-                    st.markdown(approval_card_html, unsafe_allow_html=True)
+                    agenda_html = f'<div style="margin-top: 6px; font-size: 0.82rem; color: #334155;"><strong>Agenda:</strong> {ev["agenda"]}</div>' if ev.get("agenda") else ''
+                    ev_summary = ev['summary'] or (ev['description'][:120] + '...')
+                    render_html(
+                        f'<div class="simats-card" style="margin-bottom: 0.6rem; padding: 14px 18px; border-radius: 10px; border: 1px solid #E2E8F0; background: #FFFFFF; box-shadow: 0 2px 8px rgba(10,37,64,0.04);">'
+                        f'<div style="display: flex; gap: 18px; align-items: center; flex-wrap: wrap;">'
+                        f'<div style="flex: 0 0 140px; max-width: 140px; border-radius: 8px; overflow: hidden; border: 1px solid #CBD5E1; box-shadow: 0 2px 6px rgba(0,0,0,0.06);">'
+                        f'<img src="{ev_poster_b64}" style="width: 100%; height: 105px; object-fit: cover; display: block;" alt="{ev["title"]} Poster"/>'
+                        f'</div>'
+                        f'<div style="flex: 1; min-width: 280px;">'
+                        f'<div style="display: flex; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">'
+                        f'<span class="simats-badge badge-internal">{ev["category"]}</span>'
+                        f'<span class="simats-badge badge-external">{ev["format"]}</span>'
+                        f'<span class="simats-badge badge-status-pending">Pending Approval</span>'
+                        f'</div>'
+                        f'<h3 style="margin: 0 0 6px 0; color: #0A2540; font-size: 1.2rem; font-weight: 700;">{ev["title"]}</h3>'
+                        f'<p style="margin: 0 0 8px 0; color: #475569; font-size: 0.88rem; line-height: 1.35;">{ev_summary}</p>'
+                        f'<div style="display: flex; gap: 16px; font-size: 0.82rem; color: #64748B; flex-wrap: wrap;">'
+                        f'<div>👤 <strong>Organizer:</strong> {ev["organizer_name"]} ({ev.get("organizer_department") or "Faculty"})</div>'
+                        f'<div>📅 <strong>Dates:</strong> {ev["start_time"][:16]} to {ev["end_time"][:16]}</div>'
+                        f'<div>📍 <strong>Venue:</strong> {ev["venue"]}</div>'
+                        f'<div>👥 <strong>Capacity:</strong> {ev["capacity"]} seats</div>'
+                        f'<div>💳 <strong>Ext Fee:</strong> ₹{int(ev["external_fee"])} | <strong>Internal:</strong> ₹0.00</div>'
+                        f'</div>'
+                        f'{agenda_html}'
+                        f'</div>'
+                        f'</div>'
+                        f'</div>'
+                    )
 
                     with st.form(f"admin_review_form_{ev['id']}"):
                         feedback_input = st.text_input("Reviewer Comments / Instructions (Mandatory for rejections)", placeholder="e.g. Approved by Academic Committee OR Please adjust schedule to avoid exam week.")
