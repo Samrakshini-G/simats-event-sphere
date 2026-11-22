@@ -11,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Run Python Tests
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
 
     steps:
@@ -33,9 +33,9 @@ jobs:
       - name: Run tests
         run: pytest -v
 
-  build-and-push:
-    name: Build and Publish Docker Image
-    needs: test
+  docker-build-push:
+    name: Docker Build and Push
+    needs: build-and-test
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
@@ -65,3 +65,22 @@ jobs:
           tags: |
             ghcr.io/samrakshini-g/simats-event-sphere:latest
             ghcr.io/samrakshini-g/simats-event-sphere:${{ github.sha }}
+
+  deploy:
+    name: Deploy to Kubernetes
+    needs: docker-build-push
+    runs-on: self-hosted
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Apply Kubernetes configuration
+        run: kubectl apply -f k8s-deployment.yaml
+
+      - name: Deploy newly built Docker image
+        run: kubectl set image deployment/simats-event-sphere simats-event-sphere=ghcr.io/samrakshini-g/simats-event-sphere:${{ github.sha }}
+
+      - name: Verify Kubernetes deployment
+        run: kubectl rollout status deployment/simats-event-sphere --timeout=180s
