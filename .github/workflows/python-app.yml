@@ -1,3 +1,20 @@
+name: SIMATS Event Sphere CI/CD
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    # Keep your existing complete build-and-test job here
+
+  docker-build-push:
+    # Keep your existing complete docker-build-push job here
 
   deploy:
     name: Deploy to Kubernetes
